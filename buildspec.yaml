@@ -9,7 +9,7 @@ phases:
     runtime-versions:
       java: corretto17
     commands:
-      - echo Installing SonarScanner...
+      - echo Installing Sonar Scanner...
       - wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
       - unzip sonar-scanner-cli-5.0.1.3006-linux.zip
       - export PATH=$PATH:$(pwd)/sonar-scanner-5.0.1.3006-linux/bin
@@ -18,9 +18,3 @@ phases:
     commands:
       - echo Running Sonar Scanner...
       - sonar-scanner
-
-artifacts:
-  files:
-    - '**/*'
-  base-directory: src  # This is the folder that will be deployed to S3
-
