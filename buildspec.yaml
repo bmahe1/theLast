@@ -18,8 +18,11 @@ phases:
     commands:
       - echo Running Sonar Scanner...
       - sonar-scanner
+      # Add your build commands here if needed, e.g., mvn package
 
-  artifacts:
-   files:
-     - '**/*'
-   base-directory: src 
+artifacts:
+  files:
+    - '**/*'
+  # Remove or change base-directory if 'src' folder is not the deploy folder
+  # base-directory: src
+
