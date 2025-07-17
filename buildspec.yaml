@@ -18,3 +18,8 @@ phases:
     commands:
       - echo Running Sonar Scanner...
       - sonar-scanner
+
+  artifacts:
+   files:
+     - '**/*'
+   base-directory: src 
