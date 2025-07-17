@@ -18,5 +18,3 @@ phases:
     commands:
       - echo Running Sonar Scanner...
       - sonar-scanner
-      
-
