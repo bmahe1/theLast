@@ -20,13 +20,14 @@ phases:
       - export PATH=$PATH:$(pwd)/sonar-scanner-5.0.1.3006-linux/bin
 
   pre_build:
-    commands:
-      - echo Running SonarQube scan...
-      - sonar-scanner \
-          -Dsonar.projectKey=sonar \
-          -Dsonar.sources=src \
-          -Dsonar.host.url=http://18.229.117.21:9000 \
-          -Dsonar.login=$SONAR_TOKEN
+  commands:
+    - |
+      sonar-scanner \
+      -Dsonar.projectKey=sonar \
+      -Dsonar.sources=src \
+      -Dsonar.host.url=http://18.229.117.21:9000 \
+      -Dsonar.login=$SONAR_TOKEN
+
 
   build:
     commands:
