@@ -16,9 +16,15 @@ phases:
 
   build:
     commands:
-      - echo "Running Sonar Scanner..."
+      - echo "Running SonarQube analysis..."
       - sonar-scanner \
-          -Dsonar.projectKey=my-frontend-project \
+          -Dsonar.projectKey=frontend-project \
           -Dsonar.sources=. \
           -Dsonar.host.url=http://18.231.115.242:9000 \
           -Dsonar.login=$SONAR_TOKEN
+      - echo "SonarQube scan complete"
+
+  post_build:
+    commands:
+      - echo "Deploying frontend to S3..."
+      - aws s3 sync public/ s3://your-s3-bucket-name/ --delete
