@@ -1,41 +1,23 @@
 version: 0.2
 
-env:
-  secrets-manager:
-    SONAR_TOKEN: "sonar-secret1:SONAR_TOKEN"
-  variables:
-    S3_BUCKET: "mahesh-new-sonar"
-
 phases:
   install:
     runtime-versions:
-      nodejs: 18
-      java: corretto17
+      nodejs: 16
     commands:
-      - echo "Current working directory:"
-      - pwd
-      - echo "Files in current directory:"
-      - ls -la
-      - echo "Installing dependencies..."
       - npm install
-      - echo "Installing SonarQube Scanner..."
-      - curl -o sonar.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
-      - unzip -q sonar.zip
+      - npm install -g sonarqube-scanner
 
   build:
     commands:
-      - echo "Running SonarQube Analysis..."
-      - ./sonar-scanner-5.0.1.3006-linux/bin/sonar-scanner \
-          -Dsonar.projectKey=sonar \
-          -Dsonar.sources=src \
-          -Dsonar.host.url=http://18.229.117.21:9000 \
-          -Dsonar.login=$SONAR_TOKEN
-      - echo "Building React app..."
-      - npm run build
-      - echo "Deploying build folder to S3 bucket: $S3_BUCKET"
-      - aws s3 sync build/ s3://$S3_BUCKET --delete
+      - npm run test
+      - sonar-scanner  # Uses sonar-project.properties
+      - npm run build  # Builds frontend (e.g., React/Vue)
 
-artifacts:
-  base-directory: build
-  files:
-    - '**/*'
+  post_build:
+    commands:
+      - aws s3 sync build/ s3://aws-bucket-repo --delete  # Deploys to S3
+
+env:
+  secrets-manager:
+    SONAR_TOKEN: "git/sonar/s3"  # Name of secret in Secrets Manager
