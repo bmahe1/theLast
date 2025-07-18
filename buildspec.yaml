@@ -12,6 +12,10 @@ phases:
       nodejs: 18
       java: corretto17
     commands:
+      - echo "Current working directory:"
+      - pwd
+      - echo "Files in current directory:"
+      - ls -la
       - echo "Installing dependencies..."
       - npm install
       - echo "Installing SonarQube Scanner..."
@@ -28,12 +32,6 @@ phases:
           -Dsonar.login=$SONAR_TOKEN
       - echo "Building React app..."
       - npm run build
-      - echo "Build output files:"
-      - ls -la build/
-      - echo "Checking AWS CLI version..."
-      - aws --version
-      - echo "AWS identity for deploy:"
-      - aws sts get-caller-identity
       - echo "Deploying build folder to S3 bucket: $S3_BUCKET"
       - aws s3 sync build/ s3://$S3_BUCKET --delete
 
