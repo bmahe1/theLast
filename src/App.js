@@ -1,11 +1,7 @@
-import './styles.css';
+import React from "react";
 
 function App() {
-  return (
-    <div>
-      <h1>Hello from AWS CodeBuild & S3!</h1>
-    </div>
-  );
+  return <h1>Hello from React on AWS CodeBuild!</h1>;
 }
 
 export default App;
