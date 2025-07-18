@@ -1,6 +1,9 @@
 version: 0.2
 
 env:
+  variables:
+    S3_BUCKET: "mahesh-new-sonar"
+    BUILD_DIR: "build"
   secrets-manager:
     SONAR_TOKEN: "sonar-secret1:SONAR_TOKEN"
 
@@ -8,23 +11,37 @@ phases:
   install:
     runtime-versions:
       java: corretto17
+      nodejs: 18
     commands:
-      - echo "Installing Sonar Scanner..."
+      - echo Installing dependencies...
+      - npm install
+
+      - echo Downloading SonarScanner...
       - wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
       - unzip sonar-scanner-cli-5.0.1.3006-linux.zip
       - export PATH=$PATH:$(pwd)/sonar-scanner-5.0.1.3006-linux/bin
 
+  pre_build:
+    commands:
+      - echo Running SonarQube Analysis...
+      - sonar-scanner \
+          -Dsonar.projectKey=sonar \
+          -Dsonar.sources=src \
+          -Dsonar.host.url=http://18.229.117.21:9000 \
+          -Dsonar.login=$SONAR_TOKEN
+
   build:
     commands:
-      - echo "Running SonarQube analysis..."
-      - sonar-scanner \
-          -Dsonar.projectKey=frontend-project \
-          -Dsonar.sources=. \
-          -Dsonar.host.url=http://18.231.115.242:9000 \
-          -Dsonar.login=$SONAR_TOKEN
-      - echo "SonarQube scan complete"
+      - echo Building frontend app...
+      - npm run build
 
   post_build:
     commands:
-      - echo "Deploying frontend to S3..."
-      - aws s3 sync public/ s3://your-s3-bucket-name/ --delete
+      - echo Deploying to S3 bucket $S3_BUCKET...
+      - aws s3 sync $BUILD_DIR/ s3://$S3_BUCKET/ --delete
+      - echo Deployment done!
+
+artifacts:
+  base-directory: $BUILD_DIR
+  files:
+    - '**/*'
