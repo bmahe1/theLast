@@ -16,7 +16,7 @@ phases:
       - echo Installing dependencies...
       - npm install
 
-      - echo Downloading SonarScanner...
+      - echo Installing SonarScanner...
       - wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
       - unzip sonar-scanner-cli-5.0.1.3006-linux.zip
       - export PATH=$PATH:$(pwd)/sonar-scanner-5.0.1.3006-linux/bin
@@ -32,16 +32,12 @@ phases:
 
   build:
     commands:
-      - echo Building frontend app...
-      - npm run build
+      - echo Starting build...
+      - npm run build || { echo "Build failed"; exit 1; }
 
   post_build:
     commands:
-      - echo Deploying to S3 bucket $S3_BUCKET...
+      - echo "Checking build output..."
+      - ls -la $BUILD_DIR
+      - echo Deploying to S3...
       - aws s3 sync $BUILD_DIR/ s3://$S3_BUCKET/ --delete
-      - echo Deployment done!
-
-artifacts:
-  base-directory: $BUILD_DIR
-  files:
-    - '**/*'
