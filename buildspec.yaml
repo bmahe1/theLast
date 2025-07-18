@@ -2,19 +2,23 @@ version: 0.2
 
 env:
   secrets-manager:
-    SONAR_TOKEN: "sonar-secret:SONAR_TOKEN"
+    SONAR_TOKEN: "sonar-secret1:SONAR_TOKEN"
 
 phases:
   install:
     runtime-versions:
       java: corretto17
     commands:
-      - echo Installing Sonar Scanner...
+      - echo "Installing Sonar Scanner..."
       - wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
       - unzip sonar-scanner-cli-5.0.1.3006-linux.zip
       - export PATH=$PATH:$(pwd)/sonar-scanner-5.0.1.3006-linux/bin
 
   build:
     commands:
-      - echo Running Sonar Scanner...
-      - sonar-scanner
+      - echo "Running Sonar Scanner..."
+      - sonar-scanner \
+          -Dsonar.projectKey=my-frontend-project \
+          -Dsonar.sources=. \
+          -Dsonar.host.url=http://18.231.115.242:9000 \
+          -Dsonar.login=$SONAR_TOKEN
