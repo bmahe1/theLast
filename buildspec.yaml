@@ -5,15 +5,30 @@ phases:
     runtime-versions:
       nodejs: 18
     commands:
-      - echo "Contents of working directory:"
-      - ls -la
+      - echo "Installing dependencies..."
       - npm install
+      - npm install -g sonarqube-scanner
+
+  pre_build:
+    commands:
+      - echo "Running tests..."
+      - npm test
 
   build:
     commands:
+      - echo "Building application..."
       - npm run build
-      - sonar-scanner -Dsonar.login=$SONAR_TOKEN
+      - echo "Running SonarQube scan..."
+      - sonar-scanner -Dsonar.host.url=http://18.228.154.61:9000 -Dsonar.login=$SONAR_TOKEN
 
   post_build:
     commands:
+      - echo "Deploying to S3..."
       - aws s3 sync build/ s3://aws-bucket-repo --delete
+      - echo "Deployment complete!"
+
+env:
+  variables:
+    NODE_ENV: production
+  secrets-manager:
+    SONAR_TOKEN: "git/sonar/s3"  # Name in Secrets Manager (no trailing spaces/comments)
