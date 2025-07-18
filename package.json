@@ -1,16 +1,6 @@
 {
-  "name": "aws-codepipeline-frontend",
-  "version": "1.0.0",
-  "private": true,
-  "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
-  },
-  "devDependencies": {
-    "react-scripts": "5.0.1"
-  },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build"
+    "test": "jest --coverage",
+    "build": "react-scripts build"  # Adjust for your framework
   }
 }
