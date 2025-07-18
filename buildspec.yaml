@@ -3,8 +3,6 @@ version: 0.2
 env:
   secrets-manager:
     SONAR_TOKEN: "sonar-secret1:SONAR_TOKEN"
-  variables:
-    S3_BUCKET: "mahesh-new-sonar"
 
 phases:
   install:
@@ -12,34 +10,25 @@ phases:
       nodejs: 18
       java: corretto17
     commands:
-      - echo Installing Node packages...
+      - echo "Installing dependencies..."
       - npm install
-      - echo Installing SonarScanner...
-      - wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
-      - unzip sonar-scanner-cli-5.0.1.3006-linux.zip
-      - export PATH=$PATH:$(pwd)/sonar-scanner-5.0.1.3006-linux/bin
-
-  pre_build:
-  commands:
-    - |
-      sonar-scanner \
-      -Dsonar.projectKey=sonar \
-      -Dsonar.sources=src \
-      -Dsonar.host.url=http://18.229.117.21:9000 \
-      -Dsonar.login=$SONAR_TOKEN
-
+      - echo "Installing Sonar Scanner..."
+      - curl -o sonar.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+      - unzip -q sonar.zip
 
   build:
     commands:
-      - echo Building React app...
+      - export S3_BUCKET=mahesh-new-sonar
+      - echo "Deploying to bucket: $S3_BUCKET"
+      - ./sonar-scanner-5.0.1.3006-linux/bin/sonar-scanner \
+          -Dsonar.projectKey=sonar \
+          -Dsonar.sources=src \
+          -Dsonar.host.url=http://18.229.117.21:9000 \
+          -Dsonar.login=$SONAR_TOKEN
       - npm run build
-
-  post_build:
-    commands:
-      - echo Uploading to S3...
-      - aws s3 sync build/ s3://$S3_BUCKET/ --delete
+      - aws s3 sync build/ s3://$S3_BUCKET --delete
 
 artifacts:
+  base-directory: build
   files:
     - '**/*'
-  base-directory: build
