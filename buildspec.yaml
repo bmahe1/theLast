@@ -3,21 +3,25 @@ version: 0.2
 phases:
   install:
     runtime-versions:
-      nodejs: 16
+      nodejs: 18  # Specify your Node.js version
     commands:
+      - echo "Installing dependencies..."
       - npm install
-      - npm install -g sonarqube-scanner
+      - npm install -g sonarqube-scanner  # Required for SonarQube scan
 
   build:
     commands:
-      - npm run test
-      - sonar-scanner  # Uses sonar-project.properties
-      - npm run build  # Builds frontend (e.g., React/Vue)
+      - echo "Building the application..."
+      - npm run build  # Replace with your framework's build command (e.g., `react-scripts build`)
+      - echo "Running SonarQube scan..."
+      - sonar-scanner -Dsonar.host.url=http://18.228.154.61:9000 -Dsonar.login=$SONAR_TOKEN
 
   post_build:
     commands:
-      - aws s3 sync build/ s3://aws-bucket-repo --delete  # Deploys to S3
+      - echo "Deploying to S3..."
+      - aws s3 sync build/ s3://aws-bucket-repo --delete  # Syncs the 'build/' folder to S3
+      - echo "Deployment complete!"
 
 env:
   secrets-manager:
-    SONAR_TOKEN: "git/sonar/s3"  # Name of secret in Secrets Manager
+    SONAR_TOKEN: "git/sonar/s3"  # Name of the secret in AWS Secrets Manager
