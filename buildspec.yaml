@@ -1,34 +1,47 @@
 version: 0.2
 
+env:
+  secrets-manager:
+    SONAR_TOKEN: "git/sonar/s3:SONAR_TOKEN"  # Corrected secret location
+  variables:
+    S3_BUCKET: "aws-bucket-repo"              # Corrected bucket name
+
 phases:
   install:
     runtime-versions:
       nodejs: 18
+      java: corretto17
     commands:
-      - echo "Installing dependencies..."
+      - echo Installing Node packages...
       - npm install
-      - npm install -g sonarqube-scanner
+      - echo Installing SonarScanner...
+      - wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+      - unzip sonar-scanner-cli-5.0.1.3006-linux.zip
+      - chmod +x sonar-scanner-5.0.1.3006-linux/bin/sonar-scanner
+      - export PATH=$PATH:$(pwd)/sonar-scanner-5.0.1.3006-linux/bin
 
   pre_build:
     commands:
-      - echo "Running tests..."
-      - npm test
+      - echo Running SonarScanner...
+      - sonar-scanner \
+          -Dsonar.projectKey=sonar \
+          -Dsonar.sources=src \
+          -Dsonar.host.url=http://18.228.154.61:9000 \
+          -Dsonar.login=$SONAR_TOKEN
 
   build:
     commands:
-      - echo "Building application..."
+      - echo Running tests...
+      - npm test
+      - echo Building React app...
       - npm run build
-      - echo "Running SonarQube scan..."
-      - sonar-scanner -Dsonar.host.url=http://18.228.154.61:9000 -Dsonar.login=$SONAR_TOKEN
 
   post_build:
     commands:
-      - echo "Deploying to S3..."
-      - aws s3 sync build/ s3://aws-bucket-repo --delete
-      - echo "Deployment complete!"
+      - echo Uploading to S3...
+      - aws s3 sync build/ s3://$S3_BUCKET/ --delete
 
-env:
-  variables:
-    NODE_ENV: production
-  secrets-manager:
-    SONAR_TOKEN: "git/sonar/s3"  # Name in Secrets Manager (no trailing spaces/comments)
+artifacts:
+  files:
+    - '**/*'
+  base-directory: build
