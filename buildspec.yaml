@@ -1,47 +1,41 @@
 version: 0.2
 
 env:
-  secrets-manager:
-    SONAR_TOKEN: "git/sonar/s3:SONAR_TOKEN"  # Corrected secret location
   variables:
-    S3_BUCKET: "aws-bucket-repo"              # Corrected bucket name
+    SONARQUBE_URL: "http://13.50.247.9:9000"  # Use your SonarQube URL
+    SONARQUBE_TOKEN: "sqp_af6af35a0cc3159e9040512fdc724e5813047f8b"  # Replace with your SonarQube token
+    S3_BUCKET: "aws-code-pipe-git"  # Your S3 bucket name
+    AWS_REGION: "eu-north-1"  # Your AWS region
 
 phases:
   install:
     runtime-versions:
-      nodejs: 18
-      java: corretto17
+      nodejs: 14
     commands:
-      - echo Installing Node packages...
+      - echo Installing dependencies...
       - npm install
-      - echo Installing SonarScanner...
-      - wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
-      - unzip sonar-scanner-cli-5.0.1.3006-linux.zip
-      - chmod +x sonar-scanner-5.0.1.3006-linux/bin/sonar-scanner
-      - export PATH=$PATH:$(pwd)/sonar-scanner-5.0.1.3006-linux/bin
+      - echo Installing SonarQube scanner...
+      - curl -sS -o sonarqube-scanner.zip https://github.com/SonarSource/sonar-scanner-cli/releases/download/4.6.2.2472/sonar-scanner-cli-4.6.2.2472-linux.zip
+      - unzip sonarqube-scanner.zip
+      - mv sonar-scanner-*/ /opt/sonar-scanner
+      - export PATH=$PATH:/opt/sonar-scanner/bin
 
   pre_build:
     commands:
-      - echo Running SonarScanner...
-      - sonar-scanner \
-          -Dsonar.projectKey=sonar \
-          -Dsonar.sources=src \
-          -Dsonar.host.url=http://18.228.154.61:9000 \
-          -Dsonar.login=$SONAR_TOKEN
+      - echo Running SonarQube analysis...
+      - sonar-scanner -Dsonar.projectKey=your-project-key -Dsonar.sources=./src -Dsonar.host.url=$SONARQUBE_URL -Dsonar.login=$SONARQUBE_TOKEN
 
   build:
     commands:
-      - echo Running tests...
-      - npm test
-      - echo Building React app...
-      - npm run build
+      - echo Building the application...
+      - npm run build  # or your specific build command
 
   post_build:
     commands:
-      - echo Uploading to S3...
-      - aws s3 sync build/ s3://$S3_BUCKET/ --delete
+      - echo Deploying the application to S3...
+      - aws s3 sync ./build/ s3://$S3_BUCKET/ --delete
 
 artifacts:
   files:
     - '**/*'
-  base-directory: build
+  discard-paths: yes
