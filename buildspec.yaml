@@ -2,38 +2,48 @@ version: 0.2
 
 env:
   variables:
-    SONARQUBE_URL: "http://13.50.247.9:9000"  # Use your SonarQube URL
-    SONARQUBE_TOKEN: "sqp_af6af35a0cc3159e9040512fdc724e5813047f8b"  # Replace with your SonarQube token
-    S3_BUCKET: "aws-code-pipe-git"  # Your S3 bucket name
-    AWS_REGION: "eu-north-1"  # Your AWS region
+    SONARQUBE_URL: "http://13.50.247.9:9000"   # Your SonarQube URL
+    SONARQUBE_TOKEN: "sqp_af6af35a0cc3159e9040512fdc724e5813047f8b"  # Hardcoded token
+    S3_BUCKET: "aws-code-pipe-git"            # Your S3 bucket name
+    AWS_REGION: "eu-north-1"                  # Your AWS region
 
 phases:
   install:
     runtime-versions:
       nodejs: 14
     commands:
-      - echo Installing dependencies...
+      - echo Installing Node.js dependencies...
       - npm install
-      - echo Installing SonarQube scanner...
-      - curl -sS -o sonarqube-scanner.zip https://github.com/SonarSource/sonar-scanner-cli/releases/download/4.6.2.2472/sonar-scanner-cli-4.6.2.2472-linux.zip
-      - unzip sonarqube-scanner.zip
-      - mv sonar-scanner-*/ /opt/sonar-scanner
-      - export PATH=$PATH:/opt/sonar-scanner/bin
+      - echo Downloading SonarQube Scanner...
+      - curl -sSL -o sonarqube-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+      - |
+        if file sonarqube-scanner.zip | grep -q 'Zip archive data'; then
+          unzip -q sonarqube-scanner.zip
+          mv sonar-scanner-* sonar-scanner
+          export PATH=$PATH:$(pwd)/sonar-scanner/bin
+        else
+          echo "❌ Invalid SonarQube scanner ZIP file. Download failed or corrupt."
+          exit 1
+        fi
 
   pre_build:
     commands:
       - echo Running SonarQube analysis...
-      - sonar-scanner -Dsonar.projectKey=your-project-key -Dsonar.sources=./src -Dsonar.host.url=$SONARQUBE_URL -Dsonar.login=$SONARQUBE_TOKEN
+      - sonar-scanner \
+          -Dsonar.projectKey=your-project-key \
+          -Dsonar.sources=./src \
+          -Dsonar.host.url=$SONARQUBE_URL \
+          -Dsonar.login=$SONARQUBE_TOKEN
 
   build:
     commands:
       - echo Building the application...
-      - npm run build  # or your specific build command
+      - npm run build  # Replace if using a different build tool
 
   post_build:
     commands:
-      - echo Deploying the application to S3...
-      - aws s3 sync ./build/ s3://$S3_BUCKET/ --delete
+      - echo Deploying to S3 bucket $S3_BUCKET in $AWS_REGION...
+      - aws s3 sync ./build/ s3://$S3_BUCKET/ --region $AWS_REGION --delete
 
 artifacts:
   files:
