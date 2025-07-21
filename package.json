@@ -1,19 +1,7 @@
 {
-  "name": "your-frontend-app",
+  "name": "frontend-site",
   "version": "1.0.0",
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "jest --coverage",
-    "eject": "react-scripts eject"
-  },
-  "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-scripts": "5.0.1"
-  },
-  "devDependencies": {
-    "jest": "^29.0.0",
-    "sonarqube-scanner": "^2.8.1"
+    "build": "echo 'No build needed for static site'"
   }
 }
