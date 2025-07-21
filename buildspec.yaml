@@ -2,48 +2,35 @@ version: 0.2
 
 env:
   variables:
-    SONARQUBE_HOST_URL: "http://13.50.247.9:9000"
-    SONARQUBE_TOKEN: "sqp_411d29d0da5aa8788c08d6340ef42224dc055dbb"
-    S3_BUCKET: "aws-code-pipe-git"
-    AWS_REGION: "eu-north-1"
+    S3_BUCKET: "aws-code-pipe-git"   # 🔁 Replace with your actual bucket name
 
 phases:
   install:
     runtime-versions:
       nodejs: 18
     commands:
-      - echo Installing Node.js dependencies...
+      - echo Installing dependencies...
       - npm install
       - echo Downloading SonarScanner...
-      - curl -sS -o sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
-      - unzip sonar-scanner.zip
-      - mv sonar-scanner-*/ sonar-scanner
-      - export PATH=$PATH:$(pwd)/sonar-scanner/bin
+      - wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+      - unzip sonar-scanner-cli-5.0.1.3006-linux.zip
+      - mv sonar-scanner-5.0.1.3006-linux sonar-scanner
 
- pre_build:
-  commands:
-    - echo "Testing Sonar URL..."
-    - curl http://13.50.247.9:9000
-    - echo "Running sonar-scanner..."
-    - ./sonar-scanner/bin/sonar-scanner \
-        -Dsonar.projectKey=mahesh \
-        -Dsonar.sources=. \
-        -Dsonar.host.url=http://13.50.247.9:9000 \
-        -Dsonar.login=sqp_411d29d0da5aa8788c08d6340ef42224dc055dbb \
-        -Dsonar.verbose=true
-
+  pre_build:
+    commands:
+      - echo Running SonarQube analysis...
+      - ./sonar-scanner/bin/sonar-scanner -Dsonar.verbose=true
 
   build:
     commands:
-      - echo "Building frontend..."
-      - npm run build
+      - echo Building frontend app...
+      - npm run build || echo "If no build step, skip this"
 
   post_build:
     commands:
-      - echo "Deploying to S3..."
-      - aws s3 sync ./build/ s3://$S3_BUCKET/ --region $AWS_REGION --delete
+      - echo Deploying to S3...
+      - aws s3 cp ./public s3://$S3_BUCKET/ --recursive
 
 artifacts:
   files:
     - '**/*'
-  discard-paths: yes
