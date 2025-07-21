@@ -1,27 +1,46 @@
-name: Build
+version: 0.2
 
-on:
-  push:
-    branches:
-      - main
+env:
+  variables:
+    SONARQUBE_HOST_URL: "http://13.50.247.9:9000"
+    SONARQUBE_TOKEN: "sqp_411d29d0da5aa8788c08d6340ef42224dc055dbb"
+    S3_BUCKET: "aws-code-pipe-git"
+    AWS_REGION: "eu-north-1"
 
+phases:
+  install:
+    runtime-versions:
+      nodejs: 18
+    commands:
+      - echo Installing Node.js dependencies...
+      - npm install
+      - echo Downloading SonarScanner...
+      - curl -sS -o sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+      - unzip sonar-scanner.zip
+      - mv sonar-scanner-*/ sonar-scanner
+      - export PATH=$PATH:$(pwd)/sonar-scanner/bin
 
-jobs:
+  pre_build:
+    commands:
+      - echo "Running SonarQube analysis..."
+      - sonar-scanner \
+          -Dsonar.projectKey=mahesh \
+          -Dsonar.sources=src \
+          -Dsonar.host.url=$SONARQUBE_HOST_URL \
+          -Dsonar.login=$SONARQUBE_TOKEN \
+          -Dsonar.projectVersion=$CODEBUILD_BUILD_NUMBER
+
   build:
-    name: Build
-    runs-on: ubuntu-latest
-    permissions: read-all
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-      - uses: sonarsource/sonarqube-scan-action@master
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-      # If you wish to fail your job when the Quality Gate is red, uncomment the
-      # following lines. This would typically be used to fail a deployment.
-      # - uses: sonarsource/sonarqube-quality-gate-action@master
-      #   timeout-minutes: 5
-      #   env:
-      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    commands:
+      - echo "Building frontend..."
+      - npm run build
+
+  post_build:
+    commands:
+      - echo "Deploying to S3..."
+      - aws s3 sync ./build/ s3://$S3_BUCKET/ --region $AWS_REGION --delete
+
+artifacts:
+  files:
+    - '**/*'
+  discard-paths: yes
