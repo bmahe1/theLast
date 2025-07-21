@@ -20,15 +20,18 @@ phases:
       - mv sonar-scanner-*/ sonar-scanner
       - export PATH=$PATH:$(pwd)/sonar-scanner/bin
 
-  pre_build:
-    commands:
-      - echo "Running SonarQube analysis..."
-      - sonar-scanner \
-          -Dsonar.projectKey=mahesh \
-          -Dsonar.sources=.
-          -Dsonar.host.url=$SONARQUBE_HOST_URL \
-          -Dsonar.login=$SONARQUBE_TOKEN \
-          -Dsonar.projectVersion=$CODEBUILD_BUILD_NUMBER
+ pre_build:
+  commands:
+    - echo "Testing Sonar URL..."
+    - curl http://13.50.247.9:9000
+    - echo "Running sonar-scanner..."
+    - ./sonar-scanner/bin/sonar-scanner \
+        -Dsonar.projectKey=mahesh \
+        -Dsonar.sources=. \
+        -Dsonar.host.url=http://13.50.247.9:9000 \
+        -Dsonar.login=sqp_411d29d0da5aa8788c08d6340ef42224dc055dbb \
+        -Dsonar.verbose=true
+
 
   build:
     commands:
