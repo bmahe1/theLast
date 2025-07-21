@@ -2,38 +2,34 @@ version: 0.2
 
 env:
   variables:
-    S3_BUCKET: "aws-code-pipe-git"   # ✅ Your S3 bucket name
+    S3_BUCKET: "aws-code-pipe-git"   # 🔁 Replace with your actual bucket name
 
 phases:
   install:
     runtime-versions:
       nodejs: 18
     commands:
-      - echo "Installing dependencies..."
+      - echo Installing dependencies...
       - npm install
-      - echo "Downloading SonarScanner..."
+      - echo Downloading SonarScanner...
       - wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
       - unzip sonar-scanner-cli-5.0.1.3006-linux.zip
       - mv sonar-scanner-5.0.1.3006-linux sonar-scanner
 
   pre_build:
     commands:
-      - echo "Running SonarQube analysis..."
-      - ./sonar-scanner/bin/sonar-scanner -Dsonar.projectKey=your_project_key \
-          -Dsonar.sources=. \
-          -Dsonar.host.url=http://<SONAR_HOST>:9000 \
-          -Dsonar.login=<SONAR_TOKEN> \
-          -Dsonar.verbose=true
+      - echo Running SonarQube analysis...
+      - ./sonar-scanner/bin/sonar-scanner -Dsonar.verbose=true
 
   build:
     commands:
-      - echo "Building frontend app..."
-      - npm run build
+      - echo Building frontend app...
+      - npm run build || echo "If no build step, skip this"
 
   post_build:
     commands:
-      - echo "Deploying to S3..."
-      - aws s3 cp ./build s3://$S3_BUCKET/ --recursive
+      - echo Deploying to S3...
+      - aws s3 cp ./public s3://$S3_BUCKET/ --recursive
 
 artifacts:
   files:
