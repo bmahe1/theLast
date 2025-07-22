@@ -2,42 +2,7 @@ version: 0.2
 
 env:
   variables:
-    S3_BUCKET: "aws-code-pipe-git"version: 0.2
-
-env:
-  variables:
     S3_BUCKET: "aws-code-pipe-git"   # 🔁 Replace with your actual bucket name
-
-phases:
-  install:
-    runtime-versions:
-      nodejs: 18
-    commands:
-      - echo Installing dependencies...
-      - npm install
-      - echo Downloading SonarScanner...
-      - wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
-      - unzip sonar-scanner-cli-5.0.1.3006-linux.zip
-      - mv sonar-scanner-5.0.1.3006-linux sonar-scanner
-
-  pre_build:
-    commands:
-      - echo Running SonarQube analysis...
-      - ./sonar-scanner/bin/sonar-scanner -Dsonar.verbose=true
-
-  build:
-    commands:
-      - echo Building frontend app...
-      - npm run build || echo "If no build step, skip this"
-
-  post_build:
-    commands:
-      - echo Deploying to S3...
-      - aws s3 cp ./public s3://$S3_BUCKET/ --recursive
-
-artifacts:
-  files:
-    - '**/*'# 🔁 Replace with your actual bucket name
 
 phases:
   install:
